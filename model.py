@@ -100,3 +100,8 @@ class Discriminator(nn.Module):
 
 
 
+
+def gradient_penalty():
+    pass 
+
+
