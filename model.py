@@ -40,10 +40,8 @@ class Generator(nn.Module):
         data:          the full graph   
         """
         x = data.x 
-        edge_index = data.edge_index
-
         for module in self.module_list():
-            x = module(x=x, edge_index = edge_index)
+            x = module(x=x, edge_index=data.edge_index)
             x = nn.Dropout(self.dropout_rate, inplace=False)(x)
             x = nn.PReLU()(x)
         
@@ -83,16 +81,14 @@ class Discriminator(nn.Module):
         """ 
         data:          graph  
         """
-        x = data.x 
-        edge_index = data.edge_index
-
+        x = data.x
         for module in self.module_list():
-            x = module(x=x, edge_index = edge_index)
+            x = module(x=x , edge_index=data.edge_index)
             x = nn.Dropout(self.dropout_rate, inplace=False)(x)
             x = nn.PReLU()(x)
 
         # Pool graph node features
-        x = global_add_pool(x)
+        x = global_add_pool(x, data.batch)
 
         # Predict WGAN score
         x = self.output_layer(x)
