@@ -1,3 +1,5 @@
+import pickle
+
 SUBTYPES_TO_REMOVE = [
  'WINTERGARTEN',
  'OUTDOOR_VOID',
@@ -68,3 +70,16 @@ SUBTYPE_MAPPING = {
     'SALESROOM': 'Meeting-Salesroom',
     'SHOWROOM': 'Meeting-Salesroom'
 }
+
+
+def save_pickle(object, filename):
+    with open(filename, 'wb') as f:
+        pickle.dump(object, f)
+    f.close()
+
+
+def load_pickle(filename):
+    with open(filename, 'rb') as f:
+        object = pickle.load(f)
+        f.close()
+    return object
