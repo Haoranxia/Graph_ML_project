@@ -5,6 +5,7 @@ from torch_geometric.nn.pool import global_add_pool
 from torch_geometric.data import Data, Batch
 import numpy as np 
 
+
 class Generator(nn.Module):
     """ 
     WGAN-GP Generator
@@ -18,17 +19,21 @@ class Generator(nn.Module):
         """
         super().__init__()
 
+        self.input_dim = input_dim
         self.hidden_dims = hidden_dims
+        self.output_dim = output_dim
+        
+        self.dropout_rate = 0.1
 
         # Network layers
-        self.module_list = []
+        self.module_list = nn.ModuleList()
 
         # Input layer:
         self.module_list.append(TAGConv(input_dim, hidden_dims[0]))
 
         # Intermediate layers
-        for i in range(1, len(hidden_dims - 1)):
-            layer = TAGConv(hidden_dims[i] - 1, hidden_dims[i])
+        for i in range(1, len(hidden_dims) - 1):
+            layer = TAGConv(hidden_dims[i - 1], hidden_dims[i])
             self.module_list.append(layer)
 
         # Output layers
@@ -40,7 +45,7 @@ class Generator(nn.Module):
         data:          the full graph   
         """
         x = data.x 
-        for module in self.module_list():
+        for module in self.module_list:
             x = module(x=x, edge_index=data.edge_index)
             x = nn.Dropout(self.dropout_rate, inplace=False)(x)
             x = nn.PReLU()(x)
@@ -56,14 +61,17 @@ class Discriminator(nn.Module):
           maximize critic score for generator samples
     """
     def __init__(self, input_dim, hidden_dims=[]):
+        super().__init__()
+
         self.input_dim = input_dim
         self.hidden_dims = hidden_dims 
+        self.dropout_rate = 0.1
 
         # scalar value (score) indicating how real the input is
         # in WGAN-GP we dont use sigmoid to turn it into a probability
         self.output_dim = 1     
 
-        self.module_list = []
+        self.module_list = nn.ModuleList()
         
         # Input layer 
         self.module_list.append(TAGConv(input_dim, hidden_dims[0]))
@@ -74,7 +82,8 @@ class Discriminator(nn.Module):
             self.module_list.append(layer)
 
         # Output layer 
-        self.output_layer = nn.Linear(hidden_dims[-1], 1)
+        output_layer = nn.Linear(hidden_dims[-1], 1)
+        self.module_list.append(output_layer)
 
     
     def forward(self, data):
@@ -82,8 +91,8 @@ class Discriminator(nn.Module):
         data:          graph  
         """
         x = data.x
-        for module in self.module_list():
-            x = module(x=x , edge_index=data.edge_index)
+        for i in range(len(self.module_list) - 1):
+            x = self.module_list[i](x=x , edge_index=data.edge_index)
             x = nn.Dropout(self.dropout_rate, inplace=False)(x)
             x = nn.PReLU()(x)
 
@@ -91,7 +100,7 @@ class Discriminator(nn.Module):
         x = global_add_pool(x, data.batch)
 
         # Predict WGAN score
-        x = self.output_layer(x)
+        x = self.module_list[-1](x)
         
         return x 
 
