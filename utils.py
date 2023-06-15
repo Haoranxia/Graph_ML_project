@@ -77,6 +77,51 @@ SUBTYPE_MAPPING = {
     'SHOWROOM': 'Meeting-Salesroom'
 }
 
+ZONING_MAPPING = {
+    'ROOM': 'Zone1',
+    'BEDROOM': 'Zone1',
+    'KITCHEN': 'Zone2',
+    'DINING': 'Zone2',
+    'KITCHEN_DINING': 'Zone2',
+    'LIVING_ROOM': 'Zone2',
+    'LIVING_DINING': 'Zone2',
+    'RECEPTION_ROOM': 'Remaining',
+    'BATHROOM': 'Zone3',
+    'TOILET': 'Zone3',
+    'SHOWER': 'Zone3',
+    'BATHTUB': 'Zone3',
+    'CORRIDOR': 'Zone2',
+    'CORRIDORS_AND_HALLS': 'Zone2',
+    'LOBBY': 'Remaining',
+    'OFFICE': 'Remaining',
+    'OFFICE_SPACE': 'Remaining',
+    'OPEN_PLAN_OFFICE': 'Remaining',
+    'STAIRS': 'Zone3',
+    'STAIRCASE': 'Zone3',
+    'RAMP': 'Remaining',
+    'BASEMENT': 'Remaining',
+    'BASEMENT_COMPARTMENT': 'Remaining',
+    'COLD_STORAGE': 'Remaining',
+    'GARAGE': 'Remaining',
+    'BIKE_STORAGE': 'Remaining',
+    'PRAM_AND_BIKE_STORAGE_ROOM': 'Remaining',
+    'CARPARK': 'Remaining',
+    'WORKSHOP': 'Remaining',
+    'FACTORY_ROOM': 'Remaining',
+    'BALCONY': 'Balcony',
+    'GARDEN': 'Remaining',
+    'TERRACE': 'Remaining',
+    'PATIO': 'Remaining',
+    'OUTDOOR_VOID': 'Remaining',
+    'WAREHOUSE': 'Remaining',
+    'LOGISTICS': 'Remaining',
+    'ARCHIVE': 'Remaining',
+    'RECORDS': 'Remaining',
+    'MEETING_ROOM': 'Remaining',
+    'SALESROOM': 'Remaining',
+    'SHOWROOM': 'Remaining'
+}
+
 
 """ 
 Categories as a dictionary with their indices for onehot encoding
