@@ -1,7 +1,6 @@
 .idea/*
 .idea/
 
-./data/*
-./data
-/data/ 
-/data
+/data/*
+
+/saved_models/*
