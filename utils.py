@@ -164,16 +164,12 @@ class Transformed_PolyGraphDataset(th.utils.data.Dataset):
         del graph_pyg.walls
         del graph_pyg.centroid 
         del graph_pyg.connectivity 
-
-        # door = getattr(graph_pyg, "door-geometry")  
-        # del door
+        del graph_pyg.door_geometry
 
         # convert edge_idx, geometry, categories to Tensors
         graph_pyg.category = onehot(graph_pyg.category)
-        # print(graph_pyg.geometry)
         graph_pyg.geometry = pad_geometry(graph_pyg.geometry, MAX_POLYGONS=30)      # TODO: Read this from file?
 
-        # print("dataloader gotten type:", type(graph_pyg))
         return graph_pyg
 
     def __len__(self):
@@ -186,7 +182,7 @@ def onehot(categories):
     """
     onehot_encoding = th.zeros((len(categories), len(CATEGORY_DICT)))
     for i, cat in enumerate(categories):
-        onehot_encoding[i][CATEGORY_DICT[cat]] = 1
+        onehot_encoding[i, CATEGORY_DICT[cat]] = 1
     return onehot_encoding
 
 
@@ -194,6 +190,8 @@ def pad_geometry(geometry, MAX_POLYGONS):
     """ 
     geometry:       list of np.ndarray representing geometries
     MAX_POLYGONS:   int
+
+    return:         tensor of size (nr. geometries, 60)
     """
     padded_geometry = th.zeros((len(geometry), MAX_POLYGONS * 2), dtype=th.float)
 
