@@ -38,7 +38,7 @@ def plot_floorplan(ax, areas, area_types, doors=False, walls=False, classes=SUBT
         except:
             color_index = classes.index(area_type)
         c=np.array(cmap(color_index)).reshape(1,4)
-        plot_polygon(ax, area, fc=c, ec=c, **kwargs)
+        plot_polygon(ax, area, fc=c, ec=c, label=c, **kwargs)
 
     if walls:
         for wall in walls:
