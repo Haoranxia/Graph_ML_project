@@ -40,11 +40,12 @@ class Generator(nn.Module):
         self.module_list.append(TAGConv(hidden_dims[-1], output_dim))
 
     
-    def forward(self, data):
+    def forward(self, data, noise):
         """ 
         data:          the full graph   
         """
-        x = data.x 
+        category = data.category 
+        x = th.concat((category, noise), dim=1)
         for module in self.module_list:
             x = module(x=x, edge_index=data.edge_index)
             x = nn.Dropout(self.dropout_rate, inplace=False)(x)
@@ -90,7 +91,7 @@ class Discriminator(nn.Module):
         """ 
         data:          graph  
         """
-        x = data.x
+        x = data.geometry
         for i in range(len(self.module_list) - 1):
             x = self.module_list[i](x=x , edge_index=data.edge_index)
             x = nn.Dropout(self.dropout_rate, inplace=False)(x)
@@ -103,46 +104,43 @@ class Discriminator(nn.Module):
         x = self.module_list[-1](x)
         
         return x 
+    
 
-
-
-
+    
 def gradient_penalty(discriminator, real, fake):
     """ 
     real: torch.geometric Batch object
     fake: torch.geometric Batch object
     NOTE: real, fake are geometric Batch objects (not tensors!). I hope I did it properly
     """
+    assert real.geometry.shape == fake.geometry.shape, "real and fake geometry shapes dont match"
+    assert real.edge_index.shape == fake.edge_index.shape, "reral and fake edge index dont match"
+    assert real.batch.shape == fake.batch.shape, "real and fake batch shape doesn't match"
 
-    # Create interpolated graph over node features and make it into a batch 
-    interpolated_batch = []
-    for (r_data, f_data) in zip(real, fake):       
-        N, F = r_data.x.shape
-        alpha = th.rand((N, 1)).repeat(1, F)
-        interpolated_x = alpha * r_data.x  + (1 - alpha) * f_data.x
-        i_data = Data(x=interpolated_x, edge_index=r_data.edge_index)
-        interpolated_batch.append(i_data)
+    real.geometry.requires_grad = True
+    #fake.geometry.requires_grad = True
 
-    interpolated_batch = Batch.from_data_list(interpolated_batch)
+    # Construct interpolated geometry/features and compute score
+    N, F = fake.geometry.shape
+    alpha = th.rand((N, 1)).repeat(1, F)
+    interpolated_geometry = alpha * real.geometry + (1 - alpha) * fake.geometry
+    #interpolated_geometry.requires_grad = True 
 
-    # Critic score of interpolated features
+    interpolated_batch = Batch(geometry=interpolated_geometry, edge_index=real.edge_index, batch=real.batch)
     interpolation_score = discriminator(interpolated_batch)
 
-    # Compute gradient of (interpolated) score wrt features
-    # Note that (inputs, outputs) linked through a function above (interpolated_batched_features)
+    # Compute gradient of interpolated score wrt interpolated features
+    # Note that (inputs, outputs) linked through a function above (discriminator is our function in this case)
     gradient = th.autograd.grad(
-        inputs=interpolated_batch,                              # what we compute the gradients wrt to
-        output=interpolation_score,                             # output we want gradients of
+        inputs=interpolated_geometry,                            # what we compute the gradients wrt to
+        outputs=interpolation_score,                             # output we want gradients of
         grad_outputs=th.ones_like(interpolation_score),
         create_graph=True,
         retain_graph=True
     )[0]
-
-    # Change shape so we can compute penalty over the non batch dimension
-    gradient = gradient.view(gradient.shape[0], -1)         
-    gradient_norm = gradient_norm(2, dim=-1)
-    gradient_penalty = th.mean((gradient_norm - 1)**2)
     
-    return gradient_penalty
+    # Change shape so we can compute penalty over the non batch dimension
+    gradient = gradient.view(gradient.shape[0], -1)       
+    gradient_norm = gradient.norm(2, dim=-1)
 
-
+    return ((gradient_norm - 1 ) ** 2).mean()
