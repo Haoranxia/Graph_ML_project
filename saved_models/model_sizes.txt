@@ -1,0 +1,15 @@
+GENERATOR:
+ModuleList(
+  (0): TAGConv(141, 64, K=3)
+  (1): TAGConv(64, 32, K=3)
+  (2): TAGConv(32, 60, K=3)
+)
+
+
+DISCRIMINATOR:
+ModuleList(
+  (0): TAGConv(60, 64, K=3)
+  (1): TAGConv(64, 32, K=3)
+  (2): TAGConv(32, 16, K=3)
+  (3): Linear(in_features=16, out_features=1, bias=True)
+)
