@@ -3,7 +3,10 @@ import torch as th
 import os 
 import torch_geometric as pyg 
 from torch_geometric.data import Data, Batch
+from torch_geometric.loader import DataLoader
 import numpy as np
+from tqdm.auto import tqdm
+
 
 SUBTYPES_TO_REMOVE = [
  'WINTERGARTEN',
@@ -142,56 +145,9 @@ CATEGORY_DICT = {
  'Meeting-Salesroom': 12
 }
 
-
-def save_pickle(object, filename):
-    with open(filename, 'wb') as f:
-        pickle.dump(object, f)
-    f.close()
-
-
-def load_pickle(filename):
-    with open(filename, 'rb') as f:
-        object = pickle.load(f)
-        f.close()
-    return object
-
-
-# helper function(s)
-def extract_info_pyg(graph_pyg):
-
-    x_cat = graph_pyg.category
-    y_geom = graph_pyg.geometry
-    edge_index = graph_pyg.edge_index
-
-    return x_cat, y_geom, edge_index
-
-
-# dataset and dataloader
-class PolyGraphDataset(th.utils.data.Dataset):
-    def __init__(self, path, mode='train'):
-        self.graph_path = os.path.join(path, 'graphs')
-        self.correct_ids = th.load(os.path.join(path, f'correct_ids.pickle'))[mode]
-
-        # TODO: include graph transformations if necessary
-        # self.graph_transform = graph_transform
-
-    def __getitem__(self, index):
-
-        # get floor plan identity
-        floor_id = self.correct_ids[index]
-
-        # get graph
-        graph_pyg = th.load(os.path.join(self.graph_path, f'{floor_id}.pickle'))
-        print(graph_pyg)
-        del graph_pyg.walls
-        del graph_pyg.door_geometry
-
-        return graph_pyg
-
-    def __len__(self):
-        return len(self.correct_ids)
-    
-
+"""
+Slightly modified dataset class from original
+"""
 class Transformed_PolyGraphDataset(th.utils.data.Dataset):
     def __init__(self, path, mode='train'):
         self.graph_path = os.path.join(path, 'graphs')
@@ -254,7 +210,7 @@ def pad_geometry(geometry, MAX_POLYGONS):
         # Check if we don't have too many polygons 
         if max > MAX_POLYGONS:
             # take polygons evenly spaced in the polygon
-            # TODO: Improve this?
+            # TODO: Improve this, how to select 'correct' points?
             incr = int(max / MAX_POLYGONS)
             indices = [i * incr for i in range(MAX_POLYGONS)]
             new_poly = polygon[indices, :]
