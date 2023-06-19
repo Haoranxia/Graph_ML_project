@@ -112,6 +112,27 @@ def gradient_penalty(discriminator, real, fake):
     real: torch.geometric Batch object
     fake: torch.geometric Batch object
     NOTE: real, fake are geometric Batch objects (not tensors!). I hope I did it properly
+
+    Constructs a batch (big graph) with features interpolated between real data and fake (generated) data
+    Then compute the gradients of the loss of the discriminator over the interpolated constructed data
+    
+    This gradient penalty is a type of regularization that encourages (enforces) lipschitz continuity
+    Lipschitz continuity is a property of functions where the rate of change is bounded by a constant.
+
+    In WGAN-GP the gradient penalty term tries to enforce 1-lipschitz continuity with respect to the interpolated features.
+    The interpolation can be seen as a form of distance metric between the real and fake data. We sample points along this
+    distance through interpolation. 
+
+    We then use the discriminator to score this interpolated data and try to keep the gradients of the discriminator wrt 
+    the interpolated image close to 1. The idea is that using this interpolated data as extra information we can indirectly
+    encourage the gradients to be smoother for both real and fake data resulting in some lipschitz continuity regularization
+    This is because the interpolated data provides additional information about the local behaviour of the discriminator.
+    Local as in around the real and fake data. 
+
+    The interpolated data capture the transition between the real and fake data distribution, the gradients wrt this interpolation
+    provides information about how the discriminator perceives the transition between real and fake data. We try to keep this gradient
+    close to 1 to encourage smoothness which improves training stability (big issue for GANs) 
+
     """
     assert real.geometry.shape == fake.geometry.shape, "real and fake geometry shapes dont match"
     assert real.edge_index.shape == fake.edge_index.shape, "reral and fake edge index dont match"
@@ -143,4 +164,6 @@ def gradient_penalty(discriminator, real, fake):
     gradient = gradient.view(gradient.shape[0], -1)       
     gradient_norm = gradient.norm(2, dim=-1)
 
+    # (norm - 1) ** 2 enforces 1 lipschitz continutiy as we aim for this value to be as small as possible (0)
+    # which is only achieved when the gradient_norm = 1
     return ((gradient_norm - 1 ) ** 2).mean()
