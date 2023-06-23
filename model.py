@@ -135,7 +135,7 @@ def gradient_penalty(discriminator, real, fake):
 
     """
     assert real.geometry.shape == fake.geometry.shape, "real and fake geometry shapes dont match"
-    assert real.edge_index.shape == fake.edge_index.shape, "reral and fake edge index dont match"
+    assert real.edge_index.shape == fake.edge_index.shape, "real and fake edge index dont match"
     assert real.batch.shape == fake.batch.shape, "real and fake batch shape doesn't match"
 
     real.geometry.requires_grad = True
@@ -167,3 +167,28 @@ def gradient_penalty(discriminator, real, fake):
     # (norm - 1) ** 2 enforces 1 lipschitz continutiy as we aim for this value to be as small as possible (0)
     # which is only achieved when the gradient_norm = 1
     return ((gradient_norm - 1 ) ** 2).mean()
+
+
+def polygon_penalty(real_geometry, fake_geometry, alpha=0.1):
+    """
+    Compute a penalty based on MSE distance between the real and the fake geometry coordinates
+    """
+
+    # MSE distance between real and fake
+    polygon_similarity = ((real_geometry - fake_geometry) ** 2).mean()
+
+    # TODO: Penalty for more polygons in fake compared to real data?
+
+    return polygon_similarity
+
+
+def boundary_penalty(fake_geometries, boundary, MAX_POLYGONS):
+    """
+    fake_geometry:  tensor of (batch_size * nodes, polygons)
+    boundary:       tensor of (nr. boundary polygons)
+    """
+
+    # We can subtracct for each polygon in the geometry, the boundary polygons.
+    # Then we look for the result that is the smallest (indicating that boundary polygon was the closest)
+    # and use it as a penalty. If result is positive then 
+    pass
