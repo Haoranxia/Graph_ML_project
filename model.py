@@ -12,7 +12,7 @@ class Generator(nn.Module):
 
     Goal: make Discriminator maximize its output (score)
     """
-    def __init__(self, input_dim, output_dim, hidden_dims=[]):
+    def __init__(self, input_dim, output_dim, hidden_dims=[], device='cpu'):
         """ 
         input_dim:      
         outpit_dim:     
@@ -22,7 +22,8 @@ class Generator(nn.Module):
         self.input_dim = input_dim
         self.hidden_dims = hidden_dims
         self.output_dim = output_dim
-        
+        self.device = device
+
         self.dropout_rate = 0.1
 
         # Network layers
@@ -44,10 +45,10 @@ class Generator(nn.Module):
         """ 
         data:          the full graph   
         """
-        category = data.category 
-        x = th.concat((category, noise), dim=1)
+        category = data.category
+        x = th.concat((category.to(self.device), noise.to(self.device)), dim=1)
         for module in self.module_list:
-            x = module(x=x, edge_index=data.edge_index)
+            x = module(x=x, edge_index=data.edge_index.to(self.device))
             x = nn.Dropout(self.dropout_rate, inplace=False)(x)
             x = nn.PReLU()(x)
         
@@ -61,11 +62,13 @@ class Discriminator(nn.Module):
     Goal: minimize critic score for real samples
           maximize critic score for generator samples
     """
-    def __init__(self, input_dim, hidden_dims=[]):
+    def __init__(self, input_dim, hidden_dims=[], device='cpu'):
         super().__init__()
 
         self.input_dim = input_dim
-        self.hidden_dims = hidden_dims 
+        self.hidden_dims = hidden_dims
+        self.device = device
+
         self.dropout_rate = 0.1
 
         # scalar value (score) indicating how real the input is
@@ -91,9 +94,10 @@ class Discriminator(nn.Module):
         """ 
         data:          graph  
         """
-        x = data.geometry
+        x = data.geometry.to(self.device)
+
         for i in range(len(self.module_list) - 1):
-            x = self.module_list[i](x=x , edge_index=data.edge_index)
+            x = self.module_list[i](x=x , edge_index=data.edge_index.to(self.device))
             x = nn.Dropout(self.dropout_rate, inplace=False)(x)
             x = nn.PReLU()(x)
 
@@ -102,7 +106,7 @@ class Discriminator(nn.Module):
 
         # Predict WGAN score
         x = self.module_list[-1](x)
-        
+
         return x 
     
 
