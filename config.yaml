@@ -1,0 +1,33 @@
+seed: 0
+opt:
+  optimizer: Adam
+  momentum: 0.9
+  weight_decay: 1e-4
+  lr: 0.001
+  betas: (0.5, 0.999)
+model:
+  name: 'tag_conv'
+  framework: 'gan'
+  noise_size: 128
+  gen_hids_size: (64, 32, 32)
+  gen_out_size: 5
+  dis_hids_size: (64, 32, 16)
+  n_critic: 5
+  lambda_gp: 10
+train:
+  start_epoch: 0
+  epochs: 50
+  bs: 32
+eval:
+dataset:
+  path: 'C:\Users\caspervanengel\OneDrive\Documents\PHD\1_data\swiss-dwellings\3.0.0\cvaad-challenge'
+  ratio: 0.8
+  max_polygons: 30
+  num_workers: 4
+wandb:
+  log: true
+  dir: ./
+  name: tag-conv-gan
+  entity: casper-van-engelenburg
+  project: floor-plan-auto-completion
+misc:

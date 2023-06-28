@@ -225,3 +225,16 @@ def pad_geometry(geometry, MAX_POLYGONS):
         padded_geometry[i, MAX_POLYGONS:MAX_POLYGONS + max] = polygon[:, 1]
     
     return padded_geometry
+
+
+def load_pickle(filename):
+    with open(filename, 'rb') as f:
+        object = pickle.load(f)
+        f.close()
+    return object
+
+
+def save_pickle(object, filename):
+    with open(filename, 'wb') as f:
+        pickle.dump(object, f)
+    f.close()
